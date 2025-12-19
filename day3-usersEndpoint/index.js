@@ -7,6 +7,26 @@ const PORT = 8000;
 let id = 0;
 app.use(express.json());
 let users = [];
+
+function sendError(res,code,message){
+    return res.status(code).json({
+        "success":false,
+        message,
+    })
+}
+function findUserById(id){
+    return users.find(u => u.id === id);
+}
+function validateId(res,id){
+    if(isNaN(id)){
+        sendError(res,400,"Invalide id");
+        return false;
+    }
+    return true;
+}
+
+
+
 app.get("/users",(req,res)=>{
     return res.status(200).json({
         "success" : true,
@@ -17,11 +37,8 @@ app.get("/users",(req,res)=>{
 
 app.post("/users",(req,res)=>{
     const payload = req.body;
-    if(Object.keys(payload).length === 0){
-        return res.status(400).json({
-            "success" : false,
-            "message" : "Nothing received in body"
-        });
+    if(!payload.name){
+        return sendError(res,400,"Nothing received in body");
     }
     users = [{
                 "id":++id,
@@ -37,12 +54,12 @@ app.post("/users",(req,res)=>{
 
 app.get("/users/:id",(req,res)=>{
     const id = Number(req.params.id);
-    const user = users.find(u => u.id === id)
+    if(!validateId(res,id)){
+        return;
+    }
+    const user = findUserById(id);
     if(!user){
-        return res.status(404).json({
-            "success":false,
-            "message":"User Not Found"
-        })
+        return sendError(res,404,"User not found")
     }
     return res.status(200).json({
         "success":true,
@@ -53,12 +70,12 @@ app.get("/users/:id",(req,res)=>{
 
 app.delete("/users/:id",(req,res)=>{
     const id = Number(req.params.id);
+    if(!validateId(res,id)){
+        return;
+    }
     const index = users.findIndex(u => u.id === id);
     if(index === -1){
-        return res.status(404).status(404).json({
-            "success":false,
-            "message":"User not found"
-        })
+        return sendError(res,404,"User not found");
     }
     users.splice(index,1);
     return res.status(200).json({
@@ -70,20 +87,17 @@ app.delete("/users/:id",(req,res)=>{
 
 app.patch("/users/:id",(req,res)=>{
     const id = Number(req.params.id);
+    if(!validateId(res,id)){
+        return;
+    }
     const payload = req.body;
-    if(Object.keys(payload).length === 0 || !payload.name) {
-        return res.status(400).json({
-            "success":false,
-            "message":"Invalid body"
-        })
+    if(!payload.name) {
+        return sendError(res,400,"Invalid body");
     }
 
-    const user = users.find(u => u.id === id)
+    const user = findUserById(id);
     if(!user){
-        return res.status(404).json({
-            "success":false,
-            "message":"User doesnt exists."
-        });
+        return sendError(res,404,"User doesnt exists.");
     }
 
     user.name = payload.name;
