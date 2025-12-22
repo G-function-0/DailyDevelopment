@@ -20,10 +20,7 @@ const sendError = (res,code,message) => {
 let db;
 let users;
 
-// const connection = asyncHandler(async () => {
-//     db = await connectDB();
-//     users = db.collection("users");
-// })
+
 
 
 
@@ -43,7 +40,7 @@ app.get("/users", asyncHandler(async (req,res)=>{
     const db = await connectDB();
     const users = db.collection("users");
     const allUser = await users.find({}).toArray();
-    res.status(200).json({
+    return res.status(200).json({
         "success": true,
         "message":"these are all the users",
         allUser,
@@ -66,7 +63,7 @@ app.post("/users", asyncHandler(async (req,res)=>{
         "name" : payload.name,
         "email" : payload.email
     })
-    res.status(201).json({
+    return res.status(201).json({
         success : true,
         message : "User Created"
     })
@@ -86,14 +83,63 @@ app.get("/users/:id",asyncHandler(async (req,res)=>{
         return sendError(res,404,"User not Found");
     }
 
-    res.status(200).json({
+    return res.status(200).json({
         success : true,
         message: "Here is your user",
         user,
     })
 }))
 
+app.delete("/users/:id", asyncHandler(async (req, res)=>{
+    const {id} = req.params;
+    if(!ObjectId.isValid(id)){
+        return sendError(res,400,"Invalid Request");
+    }
+    const db  = await connectDB();
+    const users = db.collection("users");
 
+    const result =await  users.deleteOne({_id : new ObjectId(id)});
+    
+    if(result.deletedCount === 0){
+        return sendError(res,404,"User not Found");
+    }
+
+    return res.status(200).json({
+        success : true,
+        message : "User Deleted Successfully",
+    })
+    
+}))
+
+app.patch("/users/:id", asyncHandler(async (req,res)=>{
+    const {id}  = req.params;
+    if(!ObjectId.isValid(id)){
+        return sendError(res,400,"invalid request")
+    }
+    const payload = req.body;
+    if(!payload.name && !payload.email){
+        return sendError(res,400,"Invalid body");
+    }
+    const db = await connectDB();
+    const users = db.collection("users");
+    const updateFeilds = {};
+    if(payload.name)  updateFeilds.name = payload.name;
+    if(payload.email) updateFeilds.email  = payload.email;
+    const result =await users.updateOne({_id:new ObjectId(id)},{$set : updateFeilds});
+    if(result.matchedCount === 0){
+        return sendError(res,404,"User Not Found");
+    }
+
+    const updatedUser = await users.findOne({_id :  new ObjectId(id)});
+
+    return res.status(200).json({
+        success:true,
+        message:"User is updated Successfully",
+        updatedUser
+    })
+    
+})
+)
 
 
 app.use((err,req,res,next)=>{
