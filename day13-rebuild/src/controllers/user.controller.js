@@ -2,6 +2,8 @@ const { ObjectId } = require("mongodb");
 const connectDB = require("../db")
 const asyncHandler = require("../utils/asyncHandler")
 const sendError = require("../utils/sendError");
+
+
 const getAllUsers = asyncHandler(async(req,res) => {
     const db = await connectDB();
     const users = db.collection("users");
