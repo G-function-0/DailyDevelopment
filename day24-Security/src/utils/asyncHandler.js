@@ -2,7 +2,7 @@
 
 function asyncHandler(func) { 
     return function (req,res,next) { 
-        Promise 
+        return Promise 
         .resolve(func(req,res,next))
         .catch(next)
     }

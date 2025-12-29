@@ -4,15 +4,25 @@ const jwt = require("jsonwebtoken");
 const { sendError } = require("../../utils/sendError");
 const bcrypt = require("bcrypt");
 const { ObjectId } = require("mongodb");
+const { recordFailure, resetAttempts, isBlocked } = require("../../security/attemptsTracker");
+const { delay } = require("../../utils/delay");
 
 
 
 
 const login = async  (req , res ) =>{
-    const { email, password } = req.body;
-    if(!email || !password) {
+
+    await delay(1000);
+    if(!req.body.email || !req.body.password) {
         return sendError(res,400, "Email & Password are required");
     }
+    const { email, password } = req.body;
+
+    if(isBlocked(email)){
+        return sendError(res,400, "Invalid Credentials");
+    }
+
+
     const db = await connectDB();
     const users = db.collection("users");
     const user = await users.findOne({
@@ -24,6 +34,7 @@ const login = async  (req , res ) =>{
     }
     const isMatched = await bcrypt.compare(password,user.hashPassword);
     if(!isMatched){
+        recordFailure(email);
         return sendError(res,400,"invalid credentials")
     }
 
@@ -32,6 +43,7 @@ const login = async  (req , res ) =>{
         config.jwtSecret,
         { expiresIn : config.expiresIn}
     );
+    resetAttempts(email);
     res.status(200).json({
         success : true,
         message : "Logged In",
