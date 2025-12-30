@@ -13,9 +13,9 @@ app.use("/auth",authRoutes)
 app.use("/users",usersRoutes);
 
 
-app.use((err,req,res,next)=>{
-    return sendError(res,500,"internal server error (async Error)");
-})
+// app.use((err,req,res,next)=>{
+//     return sendError(res,500,"internal server error (async Error)");
+// })
 app.listen(PORT || 5173, ()=> {
     console.log(`server is running on ${PORT}`);
 })
