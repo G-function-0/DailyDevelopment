@@ -1,16 +1,9 @@
-const { MongoClient } = require("mongodb")
+
+const { default: mongoose } = require("mongoose");
 const config = require("../config/index")
 
-const client = new MongoClient(config.mongoUri);
-
-let db ;
 
 exports.connectDB = async () => {
-    
-    if(db) return db;
-
-    await client.connect();
-    db = client.db(config.dbName);
+    await mongoose.connect(config.mongoUri)
     console.log(`MongoDB connection established`);
-    return db;
 }
