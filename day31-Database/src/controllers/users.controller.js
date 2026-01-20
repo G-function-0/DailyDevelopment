@@ -19,7 +19,13 @@ const getUser = async (req, res) => {
 };
 
 const getAllUsers = async (req,res) => {
-    const allUsers = await UserModel.find({});
+    const page = Number(req.query.page) || 2;
+    const limit = Number(req.query.limit) || 2;
+    const skip = (page-1) * limit;
+    const allUsers = await UserModel.find({})
+    .skip(skip)
+    .limit(limit)
+    .sort({createdAt : 1});
     return res.status(200).json({
         success : true,
         message : "all user here",
