@@ -18,6 +18,15 @@ const getUser = async (req, res) => {
     });
 };
 
+const getAllUsers = async (req,res) => {
+    const allUsers = await UserModel.find({});
+    return res.status(200).json({
+        success : true,
+        message : "all user here",
+        allUsers
+    })
+}
+
 const deleteUser = async (req, res) => {
     const userId = req.params.id;
 
@@ -31,4 +40,4 @@ const deleteUser = async (req, res) => {
     });
 };
 
-export { getUser, deleteUser };
+export { getUser, deleteUser, getAllUsers };

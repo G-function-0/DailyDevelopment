@@ -13,7 +13,7 @@ userRouter.get("/:id",authMiddleware,
        return user?._id;
     }),
     asyncHandler(userController.getUser));
-userRouter.get("/",authMiddleware,asyncHandler(userController.getUser));
+userRouter.get("/",authMiddleware,asyncHandler(userController.getAllUsers));
 userRouter.delete("/:id",authMiddleware,requireRole("admin"),userController.deleteUser);
 
 export { userRouter }
