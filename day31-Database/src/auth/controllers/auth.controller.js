@@ -59,43 +59,43 @@ const login = async  (req , res ) =>{
     })
 } 
 
-const signup = async (req, res) => {
-    const {name, email ,password } = req.body;
-    if(!name || !email  || !password){
-        return sendError(res,400,"Both name , email and Password are required");
+    const signup = async (req, res) => {
+        const {name, email ,password } = req.body;
+        if(!name || !email  || !password){
+            return sendError(res,400,"Both name , email and Password are required");
+        }
+
+        const existingUser = await UserModel.findOne({ email });
+        if(existingUser){
+            return sendError(res,400, "User already exists");
+        }
+
+        const hashedPassword =await bcrypt.hash(password,10);
+        const user = await UserModel.create({
+            name,
+            email,
+            hashedPassword,
+            role : "user"
+        })
+        const userId = user._id.toString();
+        
+        const token = jwt.sign({ userId , role: "user"},
+        config.jwtSecret,
+        {expiresIn : config.expiresIn})
+
+        const refreshToken = generateRefreshToken();
+        await RefreshTokenModel.insertOne({
+            refreshToken,
+            userId,
+            expiresAt : new Date(Date.now() + REFRESH_TOKEN_VALIDITY)
+        })
+        return res.status(201).json({
+            success : true,
+            message : "User Registered and Logged In",
+            token,
+            refreshToken
+        })
     }
-
-    const existingUser = await UserModel.findOne({ email });
-    if(existingUser){
-        return sendError(res,400, "User already exists");
-    }
-
-    const hashedPassword =await bcrypt.hash(password,10);
-    const user = await UserModel.create({
-        name,
-        email,
-        hashedPassword,
-        role : "user"
-    })
-    const userId = user._id.toString();
-    
-    const token = jwt.sign({ userId , role: "user"},
-     config.jwtSecret,
-      {expiresIn : config.expiresIn})
-
-    const refreshToken = generateRefreshToken();
-    await RefreshTokenModel.insertOne({
-        refreshToken,
-        userId,
-        expiresAt : new Date(Date.now() + REFRESH_TOKEN_VALIDITY)
-    })
-      return res.status(201).json({
-        success : true,
-        message : "User Registered and Logged In",
-        token,
-        refreshToken
-      })
-}
 
 const refresh = async (req, res) => {
     const { refreshToken } = req.body;
